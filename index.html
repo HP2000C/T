@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبدل تومان و ریال | عدد و حروف</title>
+
+    <!-- فونت‌های تاپ -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v33.1.0/dist/font-face.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/doran-font@v0.1.0/dist/font-face.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/sahel-font@v3.4.0/dist/font-face.css" rel="stylesheet">
+
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --bg: #f4f6fb;
+            --surface: rgba(255, 255, 255, 0.8);
+            --surface2: rgba(255, 255, 255, 0.65);
+            --gold: #b8860b;
+            --gold-light: #d4a017;
+            --accent: #6c5ce7;
+            --accent2: #a29bfe;
+            --text: #1e1e30;
+            --text2: #5a5a7a;
+            --border: rgba(0, 0, 0, 0.06);
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+            --radius: 24px;
+            --radius-sm: 18px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazir', 'Doran', 'Sahel', sans-serif;
+            background: linear-gradient(145deg, #eef0f5 0%, #e0e4ed 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text);
+            direction: rtl;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Canvas پس‌زمینه */
+        #starCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* هدر */
+        .header {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .header .icon {
+            font-size: 44px;
+            display: block;
+            margin-bottom: 4px;
+            filter: drop-shadow(0 8px 12px rgba(180, 130, 10, 0.15));
+        }
+        .header h1 {
+            font-size: 1.9em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #b8860b, #d4a017);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.2px;
+        }
+        .header p {
+            color: #6b6b8a;
+            font-size: 0.85em;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* کارت */
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: var(--radius);
+            padding: 26px 22px;
+            box-shadow: var(--shadow);
+            transition: 0.25s ease;
+        }
+        .card:hover {
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+            border-color: rgba(180, 130, 10, 0.2);
+        }
+
+        /* انتخاب واحد */
+        .unit-toggle {
+            display: flex;
+            gap: 6px;
+            background: rgba(235, 237, 245, 0.8);
+            border-radius: 40px;
+            padding: 5px;
+            align-self: flex-start;
+            margin-bottom: 18px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .unit-btn {
+            padding: 10px 24px;
+            border-radius: 30px;
+            border: none;
+            background: transparent;
+            color: #555;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .unit-btn.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(108, 92, 231, 0.3);
+        }
+        .unit-btn:hover:not(.active) {
+            background: rgba(108, 92, 231, 0.08);
+            color: #333;
+        }
+
+        /* ورودی */
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .input-field {
+            flex: 1;
+            position: relative;
+        }
+        .input-field input {
+            width: 100%;
+            padding: 15px 44px 15px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            background: rgba(240, 242, 248, 0.7);
+            backdrop-filter: blur(12px);
+            color: #1a1a2e;
+            font-family: inherit;
+            font-size: 1em;
+            transition: 0.25s;
+            outline: none;
+            letter-spacing: 0.3px;
+            direction: rtl;
+            text-align: right;
+        }
+        .input-field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 5px rgba(108, 92, 231, 0.1);
+            background: #fff;
+        }
+        .input-field .unit-hint {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.78em;
+            color: #888;
+            font-weight: 500;
+            pointer-events: none;
+            background: rgba(240,242,248,0.9);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .clear-btn {
+            background: rgba(255,255,255,0.6);
+            border: 1px solid rgba(0,0,0,0.06);
+            color: #888;
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        .clear-btn:hover {
+            color: #e74c3c;
+            border-color: rgba(231, 76, 60, 0.2);
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        /* شبکه خروجی */
+        .output-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+        .output-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            border-radius: var(--radius-sm);
+            padding: 18px 16px;
+            transition: 0.25s;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
+        }
+        .output-card::after {
+            content: '';
+            position: absolute;
+            top: -20%;
+            right: -10%;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, rgba(180, 130, 10, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .output-card .label {
+            font-size: 0.78em;
+            color: #6e6e8a;
+            font-weight: 500;
+            letter-spacing: 0.2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .output-card .value {
+            font-size: 1.05em;
+            font-weight: 700;
+            color: #1e1e30;
+            word-break: break-word;
+            line-height: 1.8;
+            letter-spacing: 0.2px;
+            min-height: 2.2em;
+        }
+        .output-card .value.empty {
+            color: #b0b0c8;
+            font-style: italic;
+            font-size: 0.9em;
+            font-weight: 400;
+        }
+        .copy-btn {
+            align-self: flex-end;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            color: #666;
+            cursor: pointer;
+            padding: 6px 18px;
+            border-radius: 22px;
+            font-family: inherit;
+            font-size: 0.78em;
+            transition: 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .copy-btn:hover {
+            background: rgba(108, 92, 231, 0.08);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .copy-btn.copied {
+            background: #27ae60;
+            border-color: #27ae60;
+            color: #fff;
+            animation: pop 0.4s ease;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        /* دکمه عکس */
+        .export-btn {
+            background: linear-gradient(135deg, #6c5ce7, #5a4bd1);
+            border: none;
+            color: #fff;
+            padding: 13px 28px;
+            border-radius: 30px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.25s;
+            box-shadow: 0 12px 28px rgba(108, 92, 231, 0.25);
+            margin-top: 16px;
+        }
+        .export-btn:hover {
+            background: linear-gradient(135deg, #7d6ff0, #6c5ce7);
+            box-shadow: 0 16px 36px rgba(108, 92, 231, 0.35);
+            transform: translateY(-2px);
+        }
+        .export-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+        }
+
+        /* نوتیفیکیشن */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: #ffffff;
+            border: 1px solid #d4a017;
+            color: #b8860b;
+            padding: 10px 30px;
+            border-radius: 30px;
+            font-family: inherit;
+            font-size: 0.9em;
+            z-index: 999;
+            pointer-events: none;
+            opacity: 0;
+            transition: 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            white-space: nowrap;
+            font-weight: 500;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 500px) {
+            .output-grid {
+                grid-template-columns: 1fr;
+            }
+            .unit-btn {
+                padding: 8px 18px;
+                font-size: 0.82em;
+            }
+            .card {
+                padding: 18px 14px;
+                border-radius: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas برای ستاره‌ها و شهاب‌سنگ‌ها -->
+    <canvas id="starCanvas"></canvas>
+
+    <div class="toast" id="toast">✓ کپی شد</div>
+
+    <div class="container">
+        <div class="header">
+            <span class="icon">💎</span>
+            <h1>مبدل تومان و ریال</h1>
+            <p>عدد وارد کنید، معادل عددی و حروفی را بگیرید</p>
+        </div>
+
+        <div class="card" id="mainCard">
+            <!-- انتخاب واحد -->
+            <div class="unit-toggle" id="unitToggle">
+                <button class="unit-btn active" data-unit="toman">💰 تومان</button>
+                <button class="unit-btn" data-unit="rial">🪙 ریال</button>
+            </div>
+
+            <!-- ورودی -->
+            <div class="input-row">
+                <div class="input-field">
+                    <input type="text" id="numberInput" placeholder="مثلاً: ۱٬۵۰۰٬۰۰۰" autocomplete="off" inputmode="numeric">
+                    <span class="unit-hint" id="unitHint">تومان</span>
+                </div>
+                <button class="clear-btn" id="clearBtn" title="پاک کردن">✕</button>
+            </div>
+
+            <!-- خروجی‌ها -->
+            <div class="output-grid" id="outputGrid">
+                <div class="output-card">
+                    <div class="label">💵 تومان (عدد)</div>
+                    <div class="value empty" id="val-toman-num">—</div>
+                    <button class="copy-btn" data-target="val-toman-num">📋 کپی</button>
+                </div>
+                <div class="output-card">
+                    <div class="label">🪙 ریال (عدد)</div>
+                    <div class="value empty" id="val-rial-num">—</div>
+                    <button class="copy-btn" data-target="val-rial-num">📋 کپی</button>
+                </div>
+                <div class="output-card">
+                    <div class="label">📝 تومان (حروف)</div>
+                    <div class="value empty" id="val-toman-word">—</div>
+                    <button class="copy-btn" data-target="val-toman-word">📋 کپی</button>
+                </div>
+                <div class="output-card">
+                    <div class="label">📝 ریال (حروف)</div>
+                    <div class="value empty" id="val-rial-word">—</div>
+                    <button class="copy-btn" data-target="val-rial-word">📋 کپی</button>
+                </div>
+            </div>
+
+            <button class="export-btn" id="exportImageBtn">
+                🖼️ ذخیره خروجی به‌عنوان عکس
+            </button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== المان‌ها ==========
+            const unitBtns = document.querySelectorAll('.unit-btn');
+            const numberInput = document.getElementById('numberInput');
+            const clearBtn = document.getElementById('clearBtn');
+            const unitHint = document.getElementById('unitHint');
+            const toast = document.getElementById('toast');
+            const mainCard = document.getElementById('mainCard');
+
+            const valTomanNum = document.getElementById('val-toman-num');
+            const valRialNum = document.getElementById('val-rial-num');
+            const valTomanWord = document.getElementById('val-toman-word');
+            const valRialWord = document.getElementById('val-rial-word');
+
+            let currentUnit = 'toman';
+
+            // ========== صداهای تعاملی ==========
+            let audioCtx = null;
+            function initAudio() {
+                if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+            }
+
+            function playSound(freq = 800, duration = 0.08, type = 'sine') {
+                try {
+                    initAudio();
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {}
+            }
+
+            function clickSound() { playSound(600, 0.06, 'sine'); }
+
+            function successSound() { playSound(900, 0.1, 'sine');
+                setTimeout(() => playSound(1100, 0.08, 'sine'), 80); }
+
+            function clearSound() { playSound(300, 0.1, 'triangle'); }
+
+            // ========== انتخاب واحد ==========
+            unitBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    unitBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentUnit = btn.dataset.unit;
+                    unitHint.textContent = currentUnit === 'toman' ? 'تومان' : 'ریال';
+                    clickSound();
+                    processInput();
+                });
+            });
+
+            // ========== پاک کردن ==========
+            clearBtn.addEventListener('click', () => {
+                numberInput.value = '';
+                clearAllOutputs();
+                clearSound();
+                numberInput.focus();
+            });
+
+            // ========== پاک‌سازی عدد ==========
+            function cleanNumber(str) {
+                let cleaned = str.replace(/[،,\s]/g, '');
+                const persian = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+                const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+                for (let i = 0; i < 10; i++) cleaned = cleaned.split(persian[i]).join(english[i]);
+                cleaned = cleaned.replace(/[^0-9.]/g, '');
+                const dotIdx = cleaned.indexOf('.');
+                if (dotIdx !== -1) cleaned = cleaned.substring(0, dotIdx + 1) + cleaned.substring(dotIdx + 1).replace(
+                    /\./g, '');
+                return cleaned;
+            }
+
+            function formatWithCommas(numStr) {
+                if (!numStr || numStr === '') return '';
+                const parts = numStr.split('.');
+                let intPart = parts[0];
+                const decPart = parts.length > 1 ? '.' + parts[1] : '';
+                intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '٬');
+                return intPart + decPart;
+            }
+
+            // ========== عدد به حروف فارسی ==========
+            const ones = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+            const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+            const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+            const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+            const bigUnits = [
+                { value: 1e9, name: 'میلیارد' },
+                { value: 1e6, name: 'میلیون' },
+                { value: 1e3, name: 'هزار' }
+            ];
+
+            function numToWords(num) {
+                if (!Number.isFinite(num)) return '';
+                if (num === 0) return 'صفر';
+                if (num < 0) return 'منفی ' + numToWords(Math.abs(num));
+                if (!Number.isInteger(num)) {
+                    const intPart = Math.floor(num);
+                    const decPart = Math.round((num - intPart) * 100);
+                    let res = numToWords(intPart);
+                    if (decPart > 0) res += ' و ' + numToWords(decPart) + ' صدم';
+                    return res;
+                }
+                if (num < 10) return ones[num];
+                if (num < 20) return teens[num - 10];
+                if (num < 100) {
+                    const t = Math.floor(num / 10);
+                    const o = num % 10;
+                    return tens[t] + (o > 0 ? ' و ' + ones[o] : '');
+                }
+                if (num < 1000) {
+                    const h = Math.floor(num / 100);
+                    const rest = num % 100;
+                    return hundreds[h] + (rest > 0 ? ' و ' + numToWords(rest) : '');
+                }
+                for (const unit of bigUnits) {
+                    if (num >= unit.value) {
+                        const coeff = Math.floor(num / unit.value);
+                        const rest = num % unit.value;
+                        let result = numToWords(coeff) + ' ' + unit.name;
+                        if (rest > 0) result += ' و ' + numToWords(rest);
+                        return result;
+                    }
+                }
+                return num.toString();
+            }
+
+            // ========== به‌روزرسانی خروجی‌ها ==========
+            function updateOutputs(tomanAmount, rialAmount) {
+                if (tomanAmount !== null && !isNaN(tomanAmount)) {
+                    valTomanNum.textContent = formatWithCommas(tomanAmount.toString());
+                    valTomanNum.classList.remove('empty');
+                } else {
+                    valTomanNum.textContent = '—';
+                    valTomanNum.classList.add('empty');
+                }
+                if (rialAmount !== null && !isNaN(rialAmount)) {
+                    valRialNum.textContent = formatWithCommas(rialAmount.toString());
+                    valRialNum.classList.remove('empty');
+                } else {
+                    valRialNum.textContent = '—';
+                    valRialNum.classList.add('empty');
+                }
+                if (tomanAmount !== null && !isNaN(tomanAmount)) {
+                    valTomanWord.textContent = numToWords(tomanAmount) + ' تومان';
+                    valTomanWord.classList.remove('empty');
+                } else {
+                    valTomanWord.textContent = '—';
+                    valTomanWord.classList.add('empty');
+                }
+                if (rialAmount !== null && !isNaN(rialAmount)) {
+                    valRialWord.textContent = numToWords(rialAmount) + ' ریال';
+                    valRialWord.classList.remove('empty');
+                } else {
+                    valRialWord.textContent = '—';
+                    valRialWord.classList.add('empty');
+                }
+            }
+
+            function clearAllOutputs() { updateOutputs(null, null); }
+
+            function processInput() {
+                const raw = numberInput.value.trim();
+                if (raw === '') { clearAllOutputs(); return; }
+                const cleaned = cleanNumber(raw);
+                const num = parseFloat(cleaned);
+                if (isNaN(num)) { clearAllOutputs(); return; }
+                if (currentUnit === 'toman') updateOutputs(num, num * 10);
+                else updateOutputs(num / 10, num);
+            }
+
+            numberInput.addEventListener('input', processInput);
+
+            // ========== کپی ==========
+            document.querySelectorAll('.copy-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const el = document.getElementById(this.dataset.target);
+                    const text = el.textContent;
+                    if (text && text !== '—' && !el.classList.contains('empty')) copyToClipboard(text, this);
+                });
+            });
+
+            function copyToClipboard(text, btn) {
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text).then(() => onCopySuccess(btn));
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;';
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy');
+                        onCopySuccess(btn); } catch (e) { showToast('⚠️ خطا در کپی'); }
+                    document.body.removeChild(ta);
+                }
+            }
+
+            function onCopySuccess(btn) {
+                const originalHTML = btn.innerHTML;
+                btn.classList.add('copied');
+                btn.innerHTML = '✓ کپی شد';
+                successSound();
+                showToast('✅ کپی شد');
+                setTimeout(() => { btn.classList.remove('copied');
+                    btn.innerHTML = originalHTML; }, 1500);
+            }
+
+            function showToast(msg) {
+                toast.textContent = msg;
+                toast.classList.add('show');
+                clearTimeout(window.toastTimer);
+                window.toastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+            }
+
+            // ========== خروجی عکس ==========
+            document.getElementById('exportImageBtn').addEventListener('click', () => {
+                clickSound();
+                html2canvas(mainCard, {
+                    backgroundColor: '#f4f6fb',
+                    scale: 2,
+                    allowTaint: false,
+                    useCORS: true,
+                    logging: false
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'toman-rial-output.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('🖼️ عکس ذخیره شد');
+                }).catch(() => showToast('⚠️ خطا در تهیه عکس'));
+            });
+
+            // ========== پس‌زمینه ستاره ای و شهاب‌سنگ طبیعی ==========
+            const canvas = document.getElementById('starCanvas');
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let meteors = [];
+            const STAR_COUNT = 60; // ستاره‌های ثابت و چشمک‌زن
+            let stars = [];
+
+            function resizeCanvas() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+                initStars();
+            }
+
+            function initStars() {
+                stars = [];
+                for (let i = 0; i < STAR_COUNT; i++) {
+                    stars.push({
+                        x: Math.random() * width,
+                        y: Math.random() * height,
+                        radius: Math.random() * 1.8 + 0.4,
+                        opacity: Math.random(),
+                        speed: Math.random() * 0.02 + 0.005,
+                        direction: Math.random() < 0.5 ? 1 : -1
+                    });
+                }
+            }
+
+            class Meteor {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * width;
+                    this.y = Math.random() * (height * 0.4);
+                    this.length = Math.random() * 90 + 40;
+                    this.speed = Math.random() * 3 + 1.5;
+                    this.opacity = Math.random() * 0.7 + 0.2;
+                    this.angle = 20 * Math.PI / 180;
+                    this.vx = Math.cos(this.angle) * this.speed;
+                    this.vy = Math.sin(this.angle) * this.speed;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.opacity -= 0.004;
+                    if (this.opacity <= 0 || this.y > height + 50 || this.x > width + 50) this.reset();
+                }
+                draw() {
+                    ctx.beginPath();
+                    const startX = this.x;
+                    const startY = this.y;
+                    const endX = this.x - Math.cos(this.angle) * this.length;
+                    const endY = this.y - Math.sin(this.angle) * this.length;
+                    const gradient = ctx.createLinearGradient(endX, endY, startX, startY);
+                    gradient.addColorStop(0, `rgba(180, 180, 210, 0)`);
+                    gradient.addColorStop(1, `rgba(255, 255, 240, ${this.opacity})`);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = 1.2;
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                }
+            }
+
+            for (let i = 0; i < 18; i++) meteors.push(new Meteor());
+
+            function drawStars() {
+                stars.forEach(star => {
+                    star.opacity += star.direction * star.speed;
+                    if (star.opacity >= 0.9) star.direction = -1;
+                    if (star.opacity <= 0.1) star.direction = 1;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(90, 80, 120, ${star.opacity * 0.5})`;
+                    ctx.fill();
+                });
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                drawStars();
+                meteors.forEach(m => { m.update();
+                    m.draw(); });
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            animate();
+
+            clearAllOutputs();
+        })();
+    </script>
+</body>
+</html>
+
+<!-- Hossein P. -->
